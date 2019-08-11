@@ -41,19 +41,36 @@ impl Encoder {
                 },
             }
             if bits_to_consume == 0 {
+                // This means we have a full "buffer", and need to do an extra pass to clear our buffer
                 // We don't need to get a new character this time
                 // Hoewever, we need to process an extra character
-                swap = 0;
-                println!("I think the bug happens after this");
-            } else {
-                // Save for next pass?
-                // First pass, shift 6 off of character. Second 4, etc.
-                swap = (ch as u8) >> (8 - bits_to_consume);
+                buf.push(self.get_b64_char(rust));
+                //println!("Finl2: {:?}", );
+
+                // After consuming a character, we have 2 more characters left over
+                // to process in this loop, and 8 new characters from ch.
+                // So, we neeed to grap 4 bits off of ch and process, then put the rest in 
+                // rust for next time. bits_to_consume will then be 4
+                //rust = (rust << 6);
+                swap = (ch as u8) >> 2;
+                buf.push(self.get_b64_char(swap));
+                println!("Finl2: {:?}", (swap, ch, self.get_b64_char(swap)));
+
+
+                // Reset variables for next loop....
+                rust = (ch as u8) << 2;
+                bits_to_consume = 6;
+                bits_to_mask = 8 - bits_to_consume;
+                mask = (2 as u16).pow(bits_to_mask as u32) - 1;
+                continue;
             }
+
+            // First pass, shift 6 off of character. Second 4, etc.
+            swap = (ch as u8) >> (8 - bits_to_consume);
+
+            
             // XOR rust and swap, what do they do?
             buf.push(self.get_b64_char(rust | swap));
-            println!("Swap: {:08b}", swap);
-            println!("Finl: {:08b}", rust | swap);
 
             // After consuming a character, we have 2 more characters left over
             // to process next time
@@ -67,7 +84,6 @@ impl Encoder {
 
             // Refresh bits_to_mask
             bits_to_mask = 8 - bits_to_consume;
-            println!("Rust: {:08b}", rust);
         }
         buf // final 64 bit string
     }
