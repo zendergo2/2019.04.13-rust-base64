@@ -1,1 +1,1 @@
-pub mod Encoder;
+pub mod encoder;

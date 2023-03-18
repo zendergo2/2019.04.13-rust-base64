@@ -1,6 +1,6 @@
 use std::env;
 mod base64;
-use base64::Encoder::Encoder;
+use base64::encoder::Encoder;
 fn main() {
     let args: Vec<String> = env::args().collect();
     println!("{:?}", args);
