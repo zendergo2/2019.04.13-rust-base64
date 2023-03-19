@@ -1,4 +1,5 @@
 pub struct Encoder {
+    pub logging: bool
 }
 
 impl Encoder {
@@ -17,24 +18,32 @@ impl Encoder {
                         // get largest 6 bits as output
                         out = hold >> 2;
                         next = (hold & 0b00_00_00_11) << 4;
-                        println!("count 0: {:08b} | {:08b} | {:08b} | {} | {}", hold, out, next, self.get_b64_char(&out), self.get_b64_char(&next));
+                        if self.logging {
+                            println!("count 0: {:08b} | {:08b} | {:08b} | {} | {}", hold, out, next, self.get_b64_char(&out), self.get_b64_char(&next));
+                        }
                     }
                     else if count % 3 == 1 {
                         // Get 2 bits from previous, 4 bits from current
                         out = (hold >> 4) | next;
                         next = (hold & 0b00_00_11_11) << 2;
-                        println!("count 1: {:08b} | {:08b} | {:08b} | {} | {}", hold, out, next, self.get_b64_char(&out), self.get_b64_char(&next));
+                        if self.logging {
+                            println!("count 1: {:08b} | {:08b} | {:08b} | {} | {}", hold, out, next, self.get_b64_char(&out), self.get_b64_char(&next));
+                        }
                     }
                     else if count % 3 == 2 {
                         // Get 4 bits from previous, 2 bits from current
                         out = (hold >> 6) | next;
                         next = hold & 0b00_11_11_11;
-                        println!("count 2: {:08b} | {:08b} | {:08b} | {} | {}", hold, out, next, self.get_b64_char(&out), self.get_b64_char(&next));
+                        if self.logging {
+                            println!("count 2: {:08b} | {:08b} | {:08b} | {} | {}", hold, out, next, self.get_b64_char(&out), self.get_b64_char(&next));
+                        }
                     }
                     result.push(self.get_b64_char(&out));
                     if count % 3 == 2 {
                         // Get last 6 bits from current
-                        println!("last 6: {:08b} | {}", next, self.get_b64_char(&next));
+                        if self.logging {
+                            println!("last 6: {:08b} | {}", next, self.get_b64_char(&next));
+                        }
                         result.push(self.get_b64_char(&next));
                     }
                     count += 1;
@@ -45,12 +54,16 @@ impl Encoder {
                     }
                     if count % 3 == 1 || count % 3 == 2 {
                         result.push(self.get_b64_char(&next));
-                        println!("done next: {:08b} | {}", next, self.get_b64_char(&next));
+                        if self.logging {
+                            println!("done next: {:08b} | {}", next, self.get_b64_char(&next));
+                        }
                         count += 1;
                     }
                     while count % 3 != 1 {
                         result.push('=');
-                        println!("done =");
+                        if self.logging {
+                            println!("done =");
+                        }
                         count += 1;
                     }
                     break;
@@ -91,27 +104,27 @@ mod tests {
 
     #[test]
     fn wiki_1() {
-        let enc = Encoder{};
+        let enc = Encoder{logging: true};
         assert_eq!(enc.encode("Man"), "TWFu");
     }
     #[test]
     fn wiki_2() {
-        let enc = Encoder{};
+        let enc = Encoder{logging: true};
         assert_eq!(enc.encode("Ma"), "TWE=");
     }
     #[test]
     fn wiki_3() {
-        let enc = Encoder{};
+        let enc = Encoder{logging: true};
         assert_eq!(enc.encode("M"), "TQ==");
     }
     #[test]
     fn long_string() {
-        let enc = Encoder{};
+        let enc = Encoder{logging: true};
         assert_eq!(enc.encode("asdflkjwefoinvvofoifjdfjasdlvk"), "YXNkZmxrandlZm9pbnZ2b2ZvaWZqZGZqYXNkbHZr");
     }
     #[test]
     fn quick_brown() {
-        let enc = Encoder{};
+        let enc = Encoder{logging: true};
         assert_eq!(enc.encode("The quick brown fox jumps over the lazy dog."), "VGhlIHF1aWNrIGJyb3duIGZveCBqdW1wcyBvdmVyIHRoZSBsYXp5IGRvZy4=");
     }
 
